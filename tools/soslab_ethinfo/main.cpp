@@ -92,12 +92,29 @@ bool parse(int argc, char** argv, Options& o) {
     return true;
 }
 
-void report(soslab::Lidar& lidar) {
+void report(soslab::Lidar& lidar, const std::string& o_lidarIp) {
     std::string sensorIp, pcIp, mask, gateway, mac;
     int sensorPort = 0, pcPort = 0;
 
     if (!lidar.getEthernetInfo(sensorIp, sensorPort, pcIp, pcPort, mask, gateway, mac)) {
-        std::cerr << "getEthernetInfo failed\n";
+        // connectLidar() only opens the local socket; it succeeds even with
+        // nothing on the other end. This is where a real failure surfaces, so
+        // put the diagnosis here rather than there.
+        std::cerr <<
+            "\ngetEthernetInfo failed - the sensor did not answer.\n"
+            "\n"
+            "Check the \"UDP :: Connected\" line above. The address before the colon\n"
+            "is the interface this socket actually bound to. If it is your wifi or\n"
+            "any address outside the sensor's subnet, that is the problem: give the\n"
+            "Ethernet interface an address on the sensor's subnet and try again.\n"
+            "\n"
+            "    networksetup -listallhardwareports\n"
+            "    sudo ipconfig set <iface> MANUAL 192.168.1.15 255.255.255.0\n"
+            "\n"
+            "Otherwise check the cable, that the sensor is powered, and that no\n"
+            "firewall is dropping UDP. Watch the wire with:\n"
+            "\n"
+            "    sudo tcpdump -ni <iface> -vv 'udp and host " << o_lidarIp << "'\n";
         return;
     }
 
@@ -152,7 +169,7 @@ int main(int argc, char** argv) {
     if (lidar.getSerialNum(serial)) std::cout << "  serial   " << serial << "\n";
     if (lidar.getFWVersion(fw))     std::cout << "  firmware " << fw << "\n";
 
-    report(lidar);
+    report(lidar, o.lidarIp);
 
     if (o.doSet) {
         std::cout << "\nwriting new Ethernet config ..." << std::endl;
