@@ -15,6 +15,9 @@ x-common: &common
     ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-77}"
     RMW_IMPLEMENTATION: rmw_zenoh_cpp
     XVFB_GEOMETRY: "${XVFB_GEOMETRY:-1600x900x24}"
+    # Teammates open this host's 6080 across the team wifi; set a password in
+    # .env if the network is shared with people outside the workshop.
+    VNC_PASSWORD: "${VNC_PASSWORD:-}"
   volumes:
     - ./ws/src:/home/ws/ws/src
     - ws-build:/home/ws/ws/build

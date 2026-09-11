@@ -29,14 +29,21 @@ GL5는 이더넷 UDP 전용이고, SDK가 소켓을 특정 주소에 바인딩�
 
 | 역할 | 누가 | 조건 |
 | --- | --- | --- |
-| **라이다 호스트** (조당 1대) | GL5가 꽂힌 머신 | Windows 11 22H2+ 에서 WSL2 mirrored + docker-ce |
-| **뷰어** (나머지 전원) | Mac 포함 | 제약 없음. 조의 Zenoh 라우터에 TCP로 접속 |
+| **라이다 호스트** (조당 1대) | GL5가 꽂힌 머신 | 진짜 리눅스 네트워크 스택이 필요하다 |
+| **뷰어** (나머지 전원) | Mac 포함 | 제약 없음. 호스트의 noVNC를 열거나 Zenoh로 접속 |
 
-**Mac은 라이다 호스트가 될 수 없다.** 뷰어로 참여하면 실습 내용은 전부 할 수 있다.
+호스트를 세우는 방법은 여러 가지이고, 되는 것을 위에서부터 고르면 된다.
 
-- 라이다 호스트 준비: [docs/networking-windows.md](docs/networking-windows.md)
-- 뷰어 참여: [docs/networking-mac.md](docs/networking-mac.md)
-- 막혔을 때: [docs/troubleshooting.md](docs/troubleshooting.md)
+| 문서 | 내용 |
+| --- | --- |
+| [workshop-operations.md](docs/workshop-operations.md) | **여기서 시작한다.** 스테이션 배치, 조별 역할, 당일 순서 |
+| [department-checklist.md](docs/department-checklist.md) | 컴퓨터실을 쓸 수 있는지 학과에 문의할 항목 |
+| [preflight-macos.md](docs/preflight-macos.md) | 맥에서 GL5와 통신되는지 확인. VM 없이 5분 |
+| [host-macos-utm.md](docs/host-macos-utm.md) | 맥을 호스트로. UTM 브리지 네트워킹 |
+| [host-live-usb.md](docs/host-live-usb.md) | x86 머신을 USB 부팅해 호스트로 |
+| [networking-windows.md](docs/networking-windows.md) | Windows 11 WSL2 mirrored 경로 |
+| [networking-mac.md](docs/networking-mac.md) | 맥을 뷰어로 쓰기 |
+| [troubleshooting.md](docs/troubleshooting.md) | 막혔을 때 |
 
 ## 라이다 호스트
 
@@ -93,6 +100,9 @@ rviz2 -d /opt/soslab_sdk/examples/ros2_ml/src/ml/rviz/gl5.rviz
 | `netcheck` | 스트림이 안 올 때 원인을 순서대로 점검 |
 | `soslab_ethinfo` | 센서에 플래시된 IP/포트 확인 (`:prebuilt` 전용) |
 | `sauce` | ROS 환경 다시 source |
+
+맥에서는 컨테이너 없이도 `soslab_ethinfo` 를 쓸 수 있다. SDK가 한 줄만 고치면
+macOS에서 네이티브로 빌드된다. [preflight-macos.md](docs/preflight-macos.md) 참고.
 
 ## 벤더 코드에서 미리 알아둘 것
 

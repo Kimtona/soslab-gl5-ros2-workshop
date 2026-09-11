@@ -1,12 +1,17 @@
 # Mac: 뷰어로 참여하기
 
-**Apple Silicon Mac은 GL5를 직접 받을 수 없다.** 우회로를 찾느라 시간을 쓰지
-말고 뷰어로 참여하면 된다. 실습 내용은 그대로 다 할 수 있다.
+**Docker Desktop만으로는 Mac이 GL5를 직접 받을 수 없다.** 이 문서는 맥을 뷰어로
+쓰는 방법을 다룬다. 실습 내용은 뷰어로도 그대로 다 할 수 있다.
 
-## 왜 안 되는가
+맥을 라이다 호스트로 세우는 것 자체는 가능성이 있다. Docker Desktop이 아니라 진짜
+VM을 쓰면 된다. 다만 macOS 26에 미해결 버그가 있어 사전 검증이 필수다. 시도하려면
+[preflight-macos.md](preflight-macos.md) 로 먼저 맥이 센서와 통신하는지 확인한 뒤
+[host-macos-utm.md](host-macos-utm.md) 를 따른다.
+
+## Docker Desktop으로는 왜 안 되는가
 
 Docker Desktop for Mac은 컨테이너를 VM 안에서 돌리고, 그 VM의 유일한 업링크는
-NAT된 vmnet 인터페이스다. USB-C 이더넷 어댑터는 macOS 쪽에만 존재하고 VM 안에서
+NAT된 vmnet 인터페이스다. USB-C 이더넷 어댑터는 macOS 쪽에만 존재하고 컨테이너에서
 보이지 않는다.
 
 - `--network=host` 는 Mac에서 L4 포워더일 뿐이라 도움이 안 된다. SDK가
@@ -17,9 +22,9 @@ NAT된 vmnet 인터페이스다. USB-C 이더넷 어댑터는 macOS 쪽에만 �
 - 포트 포워딩으로도 안 된다. 센서가 자기한테 플래시된 목적지로 스트림을 쏘기
   때문이다.
 
-Colima/Lima의 socket_vmnet 브리지 모드가 이론상 가능하지만 setuid 설치와
-sudoers 편집이 필요하고 Apple Silicon의 `vz` 백엔드와의 조합이 검증되지 않았다.
-워크샵 당일에 시도할 물건이 아니다.
+UTM이나 Lima/Colima의 브리지 모드는 사정이 다르다. `vmnet` 브리지는 진짜 L2
+브리지라 게스트가 센서 와이어에 자기 MAC으로 올라가고, 그 안에서는 `--network=host`
+가 정상 동작한다. 그쪽 경로는 [host-macos-utm.md](host-macos-utm.md) 에 정리했다.
 
 ## 뷰어로 참여하기
 

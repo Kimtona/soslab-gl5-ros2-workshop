@@ -56,7 +56,8 @@ COPY scripts/ /opt/scripts/
 COPY patches/ /opt/patches/
 RUN chmod +x /usr/local/bin/entrypoint.sh /opt/scripts/*.sh \
  && ln -sf /opt/scripts/build_sdk.sh  /usr/local/bin/buildsdk \
- && ln -sf /opt/scripts/net_check.sh  /usr/local/bin/netcheck
+ && ln -sf /opt/scripts/net_check.sh  /usr/local/bin/netcheck \
+ && ln -sf /opt/scripts/start_x11vnc.sh /usr/local/bin/start_x11vnc.sh
 
 ENV DISPLAY=:1 \
     LIBGL_ALWAYS_SOFTWARE=1 \
