@@ -59,7 +59,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh /opt/scripts/*.sh \
  && ln -sf /opt/scripts/net_check.sh  /usr/local/bin/netcheck \
  && ln -sf /opt/scripts/start_x11vnc.sh /usr/local/bin/start_x11vnc.sh \
  && ln -sf /opt/scripts/fake_gl5.py    /usr/local/bin/fakegl5 \
- && ln -sf /opt/scripts/start_zenohd.sh /usr/local/bin/start_zenohd.sh
+ && ln -sf /opt/scripts/start_zenohd.sh /usr/local/bin/start_zenohd.sh \
+ && ln -sf /opt/scripts/play_reference.sh /usr/local/bin/play_reference
 
 ENV DISPLAY=:1 \
     LIBGL_ALWAYS_SOFTWARE=1 \

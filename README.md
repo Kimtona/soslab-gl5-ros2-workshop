@@ -5,6 +5,20 @@ SOSLAB GL5 라이다를 ROS2 Humble에서 띄워보는 워크샵용 도커 이�
 
 RViz는 컨테이너 안에서 돌고 브라우저로 본다. XQuartz나 VcXsrv를 설치할 필요가 없다.
 
+## GL5가 어떤 센서인가
+
+**3D가 아니라 2D 스캐너다.** 화면에 포인트 클라우드 덩어리가 아니라 바닥에 깔린
+부채꼴 한 줄이 보인다. 나머지 90도는 센서의 사각지대다.
+
+| | 값 |
+| --- | --- |
+| 형태 | 단일 라인 2D 스캔. 모든 점의 Z가 0 |
+| 포인트 | 프레임당 1500점, 수평 270도, 0.18도 간격 |
+| 프레임 | 40 Hz |
+| 최대 거리 | 9 m |
+| 인터페이스 | 이더넷 100Base-T (UDP 전용) |
+| 토픽 대역폭 | 약 958 KB/s |
+
 ## 시작하기 전에
 
 **전날 미리 받아두는 편이 낫다.** 압축 상태로도 1GB 안팎이다.
@@ -99,6 +113,8 @@ rviz2 -d /opt/soslab_sdk/examples/ros2_ml/src/ml/rviz/gl5.rviz
 | `buildsdk` | SDK와 `ml` 노드를 벤더 README 순서대로 빌드 |
 | `netcheck` | 스트림이 안 올 때 원인을 순서대로 점검 |
 | `soslab_ethinfo` | 센서에 플래시된 IP/포트 확인 (`:prebuilt` 전용) |
+| `fakegl5` | 센서 없이 가짜 스캔을 퍼블리시. 설정 점검과 연습용 |
+| `play_reference` | 녹화한 rosbag을 무한 반복 재생 (기준국) |
 | `sauce` | ROS 환경 다시 source |
 
 맥에서는 컨테이너 없이도 `soslab_ethinfo` 를 쓸 수 있다. SDK가 한 줄만 고치면
@@ -125,6 +141,20 @@ macOS에서 네이티브로 빌드된다. [preflight-macos.md](docs/preflight-ma
 **`frame_id` 가 `"map"` 으로 하드코딩돼 있다.** RViz Fixed Frame도 `map` 으로
 두면 TF 퍼블리셔가 필요 없다. 타임스탬프는 센서 시각이 아니라 노드 클럭이고,
 mm에서 m 변환은 노드 안에서 일어난다.
+
+## 센서가 없을 때
+
+가짜 퍼블리셔가 벤더 노드와 똑같은 형식으로 스캔을 만들어낸다. RViz 설정, noVNC,
+조원 시청 경로를 하드웨어 없이 전부 연습할 수 있다.
+
+```bash
+docker run -it --rm -p 6080:6080 ghcr.io/kimtona/soslab-gl5-ros2-workshop:prebuilt bash
+# 컨테이너 안에서
+fakegl5 &
+rviz2 -d /opt/soslab_ws/install/ml/share/ml/rviz/gl5.rviz
+```
+
+브라우저에서 `http://localhost:6080/vnc.html?autoconnect=1` 을 연다.
 
 ## 직접 빌드하기
 

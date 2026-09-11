@@ -45,6 +45,20 @@ services:
       SOSLAB_PC_PORT: "${SOSLAB_PC_PORT:-0}"
     command: ["bash"]
 
+  # The Jetson. Replays a recorded scan so the five sensors can all go to teams,
+  # and serves as the router and noVNC everyone falls back to.
+  reference:
+    <<: *common
+    profiles: ["reference"]
+    container_name: soslab-gl5-reference
+    network_mode: host
+    volumes:
+      - ./ws/src:/home/ws/ws/src
+      - ./reference_bag:/opt/reference_bag:ro
+      - ws-build:/home/ws/ws/build
+      - ws-install:/home/ws/ws/install
+    command: ["play_reference"]
+
   viewer:
     <<: *common
     profiles: ["viewer"]
