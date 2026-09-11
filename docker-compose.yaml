@@ -1,0 +1,72 @@
+# Two roles per team.
+#
+#   --profile lidar    the one machine the GL5 is plugged into. Needs real host
+#                      networking, so a Linux host or a WSL2 distro running
+#                      docker-ce with mirrored networking. Docker Desktop's
+#                      host mode is an L4 forwarder and will not work.
+#   --profile viewer   everyone else, Macs included. Connects to the team's
+#                      zenoh router over a single outbound TCP connection,
+#                      which passes through Docker Desktop's NAT untouched.
+name: soslab-gl5-workshop
+
+x-common: &common
+  image: ${IMAGE:-ghcr.io/OWNER/soslab-gl5-ros2-workshop}:${TAG:-prebuilt}
+  environment: &common-env
+    ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-77}"
+    RMW_IMPLEMENTATION: rmw_zenoh_cpp
+    XVFB_GEOMETRY: "${XVFB_GEOMETRY:-1600x900x24}"
+  volumes:
+    - ./ws/src:/home/ws/ws/src
+    - ws-build:/home/ws/ws/build
+    - ws-install:/home/ws/ws/install
+  stdin_open: true
+  tty: true
+  restart: unless-stopped
+
+services:
+  # The GL5 driver. network_mode host means no `ports:` is allowed here, and
+  # none is needed: 6080 is already on the host.
+  lidar:
+    <<: *common
+    profiles: ["lidar"]
+    container_name: soslab-gl5-lidar
+    network_mode: host
+    privileged: true
+    environment:
+      <<: *common-env
+      SOSLAB_LIDAR_TYPE: "${SOSLAB_LIDAR_TYPE:-GL5}"
+      SOSLAB_DEVICE_IP: "${SOSLAB_DEVICE_IP:-192.168.1.10}"
+      SOSLAB_DEVICE_PORT: "${SOSLAB_DEVICE_PORT:-2000}"
+      SOSLAB_PC_IP: "${SOSLAB_PC_IP:-0.0.0.0}"
+      SOSLAB_PC_PORT: "${SOSLAB_PC_PORT:-0}"
+    command: ["bash"]
+
+  # One per team. Viewers dial in to this on tcp/7447.
+  router:
+    <<: *common
+    profiles: ["lidar"]
+    container_name: soslab-gl5-router
+    network_mode: host
+    environment:
+      <<: *common-env
+      START_GUI: "0"
+    command: ["ros2", "run", "rmw_zenoh_cpp", "rmw_zenohd"]
+
+  viewer:
+    <<: *common
+    profiles: ["viewer"]
+    container_name: soslab-gl5-viewer
+    ports:
+      - "${NOVNC_PORT:-6080}:6080"
+    environment:
+      <<: *common-env
+      # rmw_zenoh peers default to tcp/localhost:7447; point them at the team's
+      # router instead. No local zenohd is needed on a viewer.
+      ZENOH_CONFIG_OVERRIDE: 'connect/endpoints=["tcp/${ROUTER_HOST:-127.0.0.1}:7447"]'
+    command: ["bash"]
+
+volumes:
+  # Named volumes, not bind mounts: a bind-mounted colcon build tree on Docker
+  # Desktop for macOS is painfully slow.
+  ws-build:
+  ws-install:

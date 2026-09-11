@@ -1,0 +1,7 @@
+.env
+ws/
+_archive_/
+build/
+install/
+log/
+.DS_Store

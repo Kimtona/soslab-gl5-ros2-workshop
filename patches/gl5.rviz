@@ -1,0 +1,78 @@
+# RViz2 config for the GL5 workshop.
+#
+# Fixed Frame is "map" because ml_node hardcodes that frame_id on every cloud.
+# tf2 resolves map->map as identity, so no static_transform_publisher is needed.
+#
+# Reliability is Best Effort on purpose: ml_node publishes with depth 1 and the
+# default RELIABLE policy, and a reliable subscriber on a multi-megabyte cloud
+# over wifi stalls badly. A RELIABLE publisher still satisfies a BEST_EFFORT
+# subscriber, so this is safe in both directions.
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /PointCloud2 (GL5)1
+      Splitter Ratio: 0.5
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Name: root
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: map
+    Frame Rate: 30
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 1
+      Plane Cell Count: 20
+      Color: 160; 160; 164
+      Reference Frame: <Fixed Frame>
+    - Class: rviz_default_plugins/PointCloud2
+      Name: PointCloud2 (GL5)
+      Enabled: true
+      Topic:
+        Value: /lidar0/pointcloud
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Best Effort
+      Style: Points
+      Size (Pixels): 2
+      Alpha: 1
+      Decay Time: 0
+      Position Transformer: XYZ
+      Color Transformer: AxisColor
+      Axis: Z
+      Autocompute Intensity Bounds: true
+      Use Fixed Frame: true
+      Invert Rainbow: false
+  Tools:
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Current View
+      Distance: 12
+      Pitch: 0.55
+      Yaw: 3.6
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Target Frame: <Fixed Frame>
+    Saved: ~
+Window Geometry:
+  Width: 1560
+  Height: 860
+  Displays:
+    collapsed: false
+  Views:
+    collapsed: false
