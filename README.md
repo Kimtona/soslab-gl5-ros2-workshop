@@ -10,7 +10,7 @@ RViz는 컨테이너 안에서 돌고 브라우저로 본다. XQuartz나 VcXsrv�
 **전날 미리 받아두는 편이 낫다.** 압축 상태로도 1GB 안팎이다.
 
 ```bash
-docker pull ghcr.io/OWNER/soslab-gl5-ros2-workshop:dev
+docker pull ghcr.io/kimtona/soslab-gl5-ros2-workshop:dev
 ```
 
 | 태그 | 내용 |
@@ -41,7 +41,7 @@ GL5는 이더넷 UDP 전용이고, SDK가 소켓을 특정 주소에 바인딩�
 ## 라이다 호스트
 
 ```bash
-git clone https://github.com/OWNER/soslab-gl5-ros2-workshop.git
+git clone https://github.com/Kimtona/soslab-gl5-ros2-workshop.git
 cd soslab-gl5-ros2-workshop
 cp .env.example .env          # IMAGE, SOSLAB_* 수정
 

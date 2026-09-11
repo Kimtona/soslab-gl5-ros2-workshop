@@ -10,7 +10,7 @@
 name: soslab-gl5-workshop
 
 x-common: &common
-  image: ${IMAGE:-ghcr.io/OWNER/soslab-gl5-ros2-workshop}:${TAG:-prebuilt}
+  image: ${IMAGE:-ghcr.io/kimtona/soslab-gl5-ros2-workshop}:${TAG:-prebuilt}
   environment: &common-env
     ROS_DOMAIN_ID: "${ROS_DOMAIN_ID:-77}"
     RMW_IMPLEMENTATION: rmw_zenoh_cpp
