@@ -16,12 +16,15 @@ echo
 echo "1. container addresses"
 ip -4 -brief addr show | sed 's/^/    /'
 if ip -4 addr show | grep -qE 'inet 172\.(1[7-9]|2[0-9]|3[01])\.'; then
-  bad "on a Docker bridge network"
-  note "The SDK connect()s its UDP socket to the sensor, so datagrams that"
-  note "arrive translated through NAT are dropped by the kernel. This"
-  note "container needs host networking on a real Linux host."
+  note "on a Docker bridge network"
+  note "This works, but only through a published UDP port. The image patches"
+  note "the SDK so its socket is not connect()ed, which is what lets a"
+  note "datagram survive the source address rewrite. Two things must line up:"
+  note "  - the sensor's flashed pcPort, read with soslab_ethinfo"
+  note "  - docker's -p <pcPort>:<pcPort>/udp, and ip_port_pc:=<pcPort>"
+  note "If they disagree the connection succeeds and no cloud ever arrives."
 else
-  ok "not obviously behind a Docker bridge"
+  ok "not behind a Docker bridge; the sensor's wire is visible directly"
 fi
 echo
 
@@ -60,6 +63,11 @@ echo
 echo "5. udp errors so far"
 netstat -su 2>/dev/null | grep -iE 'receive buffer errors|packet receive errors' | sed 's/^/    /' \
   || note "netstat unavailable"
+echo
+
+echo "6. udp ports bound in this container"
+ss -lun 2>/dev/null | sed 's/^/    /' || note "ss unavailable"
+note "While the node runs, one of these must be the sensor's flashed pcPort."
 echo
 
 echo "next: watch the wire while the node runs"

@@ -54,13 +54,16 @@ COPY supervisord.conf /etc/supervisor/conf.d/workshop.conf
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY scripts/ /opt/scripts/
 COPY patches/ /opt/patches/
+# Pristine copy of the subscriber exercise; `startex` copies it into ~/ws/src.
+COPY exercise/ /opt/exercise/
 RUN chmod +x /usr/local/bin/entrypoint.sh /opt/scripts/*.sh \
  && ln -sf /opt/scripts/build_sdk.sh  /usr/local/bin/buildsdk \
  && ln -sf /opt/scripts/net_check.sh  /usr/local/bin/netcheck \
  && ln -sf /opt/scripts/start_x11vnc.sh /usr/local/bin/start_x11vnc.sh \
  && ln -sf /opt/scripts/fake_gl5.py    /usr/local/bin/fakegl5 \
  && ln -sf /opt/scripts/start_zenohd.sh /usr/local/bin/start_zenohd.sh \
- && ln -sf /opt/scripts/play_reference.sh /usr/local/bin/play_reference
+ && ln -sf /opt/scripts/play_reference.sh /usr/local/bin/play_reference \
+ && ln -sf /opt/scripts/start_exercise.sh /usr/local/bin/startex
 
 ENV DISPLAY=:1 \
     LIBGL_ALWAYS_SOFTWARE=1 \
@@ -94,6 +97,11 @@ ADD --chown=ws:ws https://github.com/SOSLAB-github/SOSLAB_SDK/archive/${SDK_REF}
 RUN mkdir -p ${SOSLAB_SDK_DIR} \
  && tar xzf /tmp/sdk.tar.gz --strip-components=1 -C ${SOSLAB_SDK_DIR} \
  && rm /tmp/sdk.tar.gz
+
+# Applied to the source, not at build time, so that participants who follow the
+# vendor README by hand get it too. It un-connect()s the UDP socket, which is
+# what lets the stream arrive through Docker Desktop's port publishing.
+RUN python3 /opt/scripts/patch_sdk_docker_udp.py ${SOSLAB_SDK_DIR}
 COPY tools/soslab_ethinfo/ ${SOSLAB_SDK_DIR}/soslab_ethinfo/
 RUN chown -R ws:ws ${SOSLAB_SDK_DIR}
 USER ws

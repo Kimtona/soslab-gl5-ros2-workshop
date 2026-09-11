@@ -3,11 +3,36 @@
 증상별로 찾아보면 된다. 컨테이너 안에서 `netcheck` 를 먼저 돌려보는 것이 가장
 빠르다.
 
+## `ros2 topic hz` 나 `ros2 topic list` 가 아무것도 출력하지 않는다
+
+**노드는 멀쩡한데 CLI 만 조용한 경우다.** `ros2` 커맨드라인은 데몬을 하나 띄워
+그래프 정보를 캐시하는데, 컨테이너에서 처음 부를 때 그 데몬이 토픽을 놓치는
+일이 있다. 데몬을 끄고 다시 부르면 된다.
+
+```bash
+ros2 daemon stop
+ros2 topic hz /lidar0/pointcloud
+```
+
+정말 데이터가 오는지 먼저 확인하고 싶으면 `echo` 가 데몬을 덜 타므로 더 믿을
+만하다.
+
+```bash
+ros2 topic echo --once --field header /lidar0/pointcloud
+```
+
 ## 컨테이너가 172.17.x 주소를 갖는다
 
-Docker 기본 bridge 네트워크에 있다는 뜻이고, 이 상태로는 GL5 스트림이 절대
-도착하지 않는다. 라이다 호스트는 `--network=host` 여야 하고, 그게 제대로
-동작하려면 진짜 리눅스 도커 데몬이어야 한다. `docs/networking-windows.md` 참고.
+Docker 기본 bridge 네트워크에 있다는 뜻이다. **두 가지 경우로 나뉜다.**
+
+리눅스 호스트에서 `--profile lidar` 를 쓰는 중이라면 `--network=host` 가 빠진
+것이다. 고쳐야 한다.
+
+Docker Desktop 호스트에서 `--profile lidar-mac` 을 쓰는 중이라면 정상이다.
+이 경로는 발행된 UDP 포트로 스트림을 받는다. 대신 세 개의 숫자가 전부 같아야
+한다 — 센서에 플래시된 `pcPort`, `docker` 의 `-p <포트>:<포트>/udp`, launch 의
+`ip_port_pc`. 하나라도 어긋나면 연결은 성공하고 포인트클라우드만 영영 오지
+않는다.
 
 컨테이너 시작 시 출력되는 배너의 `addresses` 줄에서 바로 확인할 수 있다.
 

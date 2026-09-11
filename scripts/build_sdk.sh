@@ -29,7 +29,13 @@ done
 
 say() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 
-say "1/5  Building the SDK  ($SDK_DIR)"
+say "1/6  Patching the SDK"
+# The vendor connect()s the UDP socket to the sensor, which makes the kernel
+# drop anything that arrives through a NAT. Removing that is what lets the
+# stream reach a container behind Docker Desktop's port publishing.
+python3 /opt/scripts/patch_sdk_docker_udp.py "$SDK_DIR"
+
+say "2/6  Building the SDK  ($SDK_DIR)"
 # The root CMakeLists picks the library suffix from pointer size alone, so this
 # produces libLidar_x64_release.so on arm64 too -- which is the exact filename
 # the example CMakeLists hardcodes. Convenient, but never validated by SOSLAB.
@@ -37,13 +43,13 @@ cmake -S "$SDK_DIR" -B "$SDK_DIR/build" -DCMAKE_BUILD_TYPE=Release
 cmake --build "$SDK_DIR/build" -j "$JOBS"
 ls -l "$SDK_DIR/_archive_/lib/"
 
-say "2/5  Copying headers and libraries into the example  (copy_api2example.sh)"
+say "3/6  Copying headers and libraries into the example  (copy_api2example.sh)"
 # The script is written against ${PWD}, so it only works from the SDK root.
 cd "$SDK_DIR"
 chmod +x ./copy_api2example.sh
 ./copy_api2example.sh
 
-say "3/5  Building soslab_ethinfo"
+say "4/6  Building soslab_ethinfo"
 # Reads the sensor's flashed Ethernet config. The GL5 streams to the pcIp:pcPort
 # stored on the device, so you need this to know what to bind to.
 cmake -S "$SDK_DIR/soslab_ethinfo" -B "$SDK_DIR/soslab_ethinfo/build" \
@@ -54,17 +60,17 @@ install -D -m 0755 "$SDK_DIR/soslab_ethinfo/build/soslab_ethinfo" \
 sudo ln -sf "$SDK_DIR/_archive_/bin/soslab_ethinfo" /usr/local/bin/soslab_ethinfo
 
 if [ "$SLIM" = "1" ]; then
-  say "4/5  Slimming the example CMakeLists"
+  say "5/6  Slimming the example CMakeLists"
   # ml_node.cpp includes only rclcpp, sensor_msgs and Lidar.h. The find_package
   # calls for cv_bridge/OpenCV/PCL/Boost are dead weight, and none of them are
   # declared in package.xml, so rosdep would never install them anyway.
   python3 /opt/scripts/slim_cmakelists.py \
     "$SDK_DIR/examples/ros2_ml/src/ml/CMakeLists.txt"
 else
-  say "4/5  Keeping the vendor CMakeLists as-is"
+  say "5/6  Keeping the vendor CMakeLists as-is"
 fi
 
-say "5/5  colcon build"
+say "6/6  colcon build"
 mkdir -p "$WS_DIR/src"
 # Link rather than copy so participants can edit the vendor source in place.
 ln -sfn "$SDK_DIR/examples/ros2_ml/src/ml" "$WS_DIR/src/ml"

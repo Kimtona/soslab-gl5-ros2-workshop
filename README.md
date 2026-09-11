@@ -46,6 +46,11 @@ GL5는 이더넷 UDP 전용이고, SDK가 소켓을 특정 주소에 바인딩�
 | **라이다 호스트** (조당 1대) | GL5가 꽂힌 머신 | 진짜 리눅스 네트워크 스택이 필요하다 |
 | **뷰어** (나머지 전원) | Mac 포함 | 제약 없음. 호스트의 noVNC를 열거나 Zenoh로 접속 |
 
+> 위의 `connect()` 패치가 들어가면서 **Docker Desktop 호스트에서도 되는
+> 경로가 생겼다** (`--profile lidar-mac`). 발행된 UDP 포트로 스트림을 받는다.
+> 다만 아직 실물 센서로 검증하지 않았으므로 위 표는 그대로 둔다. 검증 결과에
+> 따라 이 문단과 표를 고친다.
+
 호스트를 세우는 방법은 여러 가지이고, 되는 것을 위에서부터 고르면 된다.
 
 | 문서 | 내용 |
@@ -57,6 +62,7 @@ GL5는 이더넷 UDP 전용이고, SDK가 소켓을 특정 주소에 바인딩�
 | [host-live-usb.md](docs/host-live-usb.md) | x86 머신을 USB 부팅해 호스트로 |
 | [networking-windows.md](docs/networking-windows.md) | Windows 11 WSL2 mirrored 경로 |
 | [networking-mac.md](docs/networking-mac.md) | 맥을 뷰어로 쓰기 |
+| [exercise-subscriber.md](docs/exercise-subscriber.md) | 구독 노드 직접 만들기 실습. 라이다 없이 진행된다 |
 | [troubleshooting.md](docs/troubleshooting.md) | 막혔을 때 |
 
 ## 라이다 호스트
@@ -65,6 +71,7 @@ GL5는 이더넷 UDP 전용이고, SDK가 소켓을 특정 주소에 바인딩�
 git clone https://github.com/Kimtona/soslab-gl5-ros2-workshop.git
 cd soslab-gl5-ros2-workshop
 cp .env.example .env          # IMAGE, SOSLAB_* 수정
+mkdir -p ws/src               # 컨테이너의 ~/ws/src 로 마운트된다
 
 # 호스트에서. SDK가 SO_RCVBUF 를 설정하지 않아 시스템 기본값을 그대로 쓴다.
 sudo sysctl -w net.core.rmem_default=8388608 net.core.rmem_max=26214400
@@ -95,6 +102,7 @@ ros2 launch ml gl5_viz.launch.py ip_port_pc:=<위에서 읽은 pcPort>
 
 ```bash
 cp .env.example .env          # ROUTER_HOST 를 조의 라이다 호스트 주소로
+mkdir -p ws/src
 docker compose --profile viewer up -d
 docker compose exec viewer bash
 ```
@@ -113,6 +121,7 @@ rviz2 -d /opt/soslab_sdk/examples/ros2_ml/src/ml/rviz/gl5.rviz
 | `buildsdk` | SDK와 `ml` 노드를 벤더 README 순서대로 빌드 |
 | `netcheck` | 스트림이 안 올 때 원인을 순서대로 점검 |
 | `soslab_ethinfo` | 센서에 플래시된 IP/포트 확인 (`:prebuilt` 전용) |
+| `startex` | 구독 노드 실습 패키지를 `~/ws/src` 로 꺼낸다 |
 | `fakegl5` | 센서 없이 가짜 스캔을 퍼블리시. 설정 점검과 연습용 |
 | `play_reference` | 녹화한 rosbag을 무한 반복 재생 (기준국) |
 | `sauce` | ROS 환경 다시 source |
@@ -129,6 +138,14 @@ macOS에서 네이티브로 빌드된다. [preflight-macos.md](docs/preflight-ma
 스트림을 어디로 보낼지 연결 시점에 알려주지 않는다. 센서에 플래시된
 `pcIp:pcPort` 로 쏜다. 벤더 기본값 `0` 은 OS 임의 포트라서 센서가 알 수 없다.
 연결은 되는데 포인트클라우드만 안 오면 거의 항상 이것이다.
+
+**UDP 소켓이 센서 주소로 `connect()` 돼 있다.** `Netlink.cpp` 가
+`bind()` 직후 `connect()` 를 부른다. 그러면 커널이 소스가 정확히 센서가 아닌
+데이터그램을 전부 버린다. 센서의 와이어를 직접 가진 머신에서는 문제가 없지만,
+NAT 를 거쳐 오는 순간 스트림이 통째로 사라진다. 이 이미지는 `connect()` 를
+빼고 `send_to()` 로 보내도록 SDK 소스를 고쳐서 넣는다
+(`scripts/patch_sdk_docker_udp.py`). 와이어를 직접 가진 호스트에서도 동작은
+같다. 커널의 소스 주소 필터링만 없어진다.
 
 **`CMakeLists.txt` 와 `package.xml` 이 어긋나 있다.** CMake는 `cv_bridge`,
 `OpenCV`, `Boost`, `PCL` 을 찾지만 `package.xml` 에는 없어서 `rosdep install` 로는

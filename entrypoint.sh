@@ -37,6 +37,12 @@ if [ -f "${SOSLAB_WS:-/opt/soslab_ws}/install/setup.bash" ]; then
 else
   echo "  vendor node        not built -- run buildsdk, or follow the README by hand"
 fi
+echo "  exercise           startex   (subscriber you write yourself)"
+if [ -n "${SOSLAB_PC_PORT:-}" ] && [ "${SOSLAB_PC_PORT}" != "0" ]; then
+  echo "  launch             ros2 launch ml gl5_viz.launch.py \\"
+  echo "                       ip_address_device:=${SOSLAB_DEVICE_IP:-192.168.1.10} \\"
+  echo "                       ip_port_pc:=${SOSLAB_PC_PORT}"
+fi
 echo
 # The single most useful line on the screen. If this says 172.17.x, the
 # container is behind Docker's NAT and the GL5 stream will never arrive.
