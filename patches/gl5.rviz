@@ -1,18 +1,33 @@
 # RViz2 config for the GL5 workshop.
 #
+# The GL5 is a 2D scanning LiDAR, not a 3D one: 1500 points in a single line
+# across 270 degrees at 40 Hz, 9 m range. GL5.cpp sets point.z = 0.0 for every
+# point, so the whole cloud lies flat in one plane. Two consequences drive this
+# config:
+#
+#   - Colour by RGB8, never by Z axis. Every Z is zero, so an axis colour map
+#     paints the entire scan one flat colour. The vendor node maps return
+#     intensity into the rgb field (UINT32 at byte offset 12), which is the only
+#     per-point information there is to show.
+#   - Look straight down. A 270 degree fan lying in a plane is unreadable from
+#     an oblique angle, so the default view is top-down orthographic.
+#
+# The vendor maps intensity to greyscale, so the background is nearly black to
+# keep weak returns visible. If a scan still looks too dim, switch Color
+# Transformer to FlatColor for a guaranteed-bright fixed colour.
+#
 # Fixed Frame is "map" because ml_node hardcodes that frame_id on every cloud.
 # tf2 resolves map->map as identity, so no static_transform_publisher is needed.
 #
 # Reliability is Best Effort on purpose: ml_node publishes with depth 1 and the
-# default RELIABLE policy, and a reliable subscriber on a multi-megabyte cloud
-# over wifi stalls badly. A RELIABLE publisher still satisfies a BEST_EFFORT
-# subscriber, so this is safe in both directions.
+# default RELIABLE policy, and a RELIABLE publisher still satisfies a BEST_EFFORT
+# subscriber, so this is safe in both directions and more forgiving over wifi.
 Panels:
   - Class: rviz_common/Displays
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /PointCloud2 (GL5)1
+        - /GL5 scan1
       Splitter Ratio: 0.5
   - Class: rviz_common/Views
     Name: Views
@@ -20,19 +35,21 @@ Visualization Manager:
   Class: ""
   Name: root
   Global Options:
-    Background Color: 48; 48; 48
+    Background Color: 20; 20; 24
     Fixed Frame: map
-    Frame Rate: 30
+    Frame Rate: 40
   Displays:
     - Class: rviz_default_plugins/Grid
       Name: Grid
       Enabled: true
       Cell Size: 1
-      Plane Cell Count: 20
+      Plane Cell Count: 24
+      Plane: XY
       Color: 160; 160; 164
+      Alpha: 0.35
       Reference Frame: <Fixed Frame>
     - Class: rviz_default_plugins/PointCloud2
-      Name: PointCloud2 (GL5)
+      Name: GL5 scan
       Enabled: true
       Topic:
         Value: /lidar0/pointcloud
@@ -41,15 +58,13 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Best Effort
       Style: Points
-      Size (Pixels): 2
+      Size (Pixels): 4
       Alpha: 1
       Decay Time: 0
       Position Transformer: XYZ
-      Color Transformer: AxisColor
-      Axis: Z
-      Autocompute Intensity Bounds: true
+      Color Transformer: RGB8
       Use Fixed Frame: true
-      Invert Rainbow: false
+      Selectable: true
   Tools:
     - Class: rviz_default_plugins/MoveCamera
     - Class: rviz_default_plugins/Select
@@ -58,17 +73,28 @@ Visualization Manager:
       Line color: 128; 128; 0
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Name: Current View
-      Distance: 12
-      Pitch: 0.55
-      Yaw: 3.6
-      Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+      # Scale is pixels per metre. At 60 the 9 m range fills a 1600x900 window
+      # with room to spare.
+      Class: rviz_default_plugins/TopDownOrtho
+      Name: Top Down
+      Scale: 60
+      Angle: 0
       Target Frame: <Fixed Frame>
-    Saved: ~
+      X: 0
+      Y: 0
+    Saved:
+      # Kept for anyone who wants to confirm for themselves that the scan really
+      # is planar.
+      - Class: rviz_default_plugins/Orbit
+        Name: Orbit (oblique)
+        Distance: 14
+        Pitch: 0.9
+        Yaw: 3.14
+        Focal Point:
+          X: 0
+          Y: 0
+          Z: 0
+        Target Frame: <Fixed Frame>
 Window Geometry:
   Width: 1560
   Height: 860

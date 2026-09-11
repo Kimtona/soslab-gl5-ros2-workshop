@@ -29,7 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-humble-tf2-ros \
       ros-humble-topic-tools \
       xvfb x11vnc novnc websockify openbox xterm dbus-x11 \
-      x11-xserver-utils x11-utils \
+      x11-xserver-utils x11-utils x11-apps \
       libgl1-mesa-dri mesa-utils supervisor \
       iproute2 iputils-ping tcpdump net-tools netcat-openbsd \
       less nano vim-tiny sudo tini \
@@ -57,7 +57,9 @@ COPY patches/ /opt/patches/
 RUN chmod +x /usr/local/bin/entrypoint.sh /opt/scripts/*.sh \
  && ln -sf /opt/scripts/build_sdk.sh  /usr/local/bin/buildsdk \
  && ln -sf /opt/scripts/net_check.sh  /usr/local/bin/netcheck \
- && ln -sf /opt/scripts/start_x11vnc.sh /usr/local/bin/start_x11vnc.sh
+ && ln -sf /opt/scripts/start_x11vnc.sh /usr/local/bin/start_x11vnc.sh \
+ && ln -sf /opt/scripts/fake_gl5.py    /usr/local/bin/fakegl5 \
+ && ln -sf /opt/scripts/start_zenohd.sh /usr/local/bin/start_zenohd.sh
 
 ENV DISPLAY=:1 \
     LIBGL_ALWAYS_SOFTWARE=1 \

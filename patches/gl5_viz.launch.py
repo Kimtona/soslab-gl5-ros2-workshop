@@ -9,6 +9,11 @@
    is the SDK's own default and removes the need for the container's network
    namespace to own that address.
 
+It also publishes one static transform. ml_node hardcodes frame_id "map" and
+nothing else publishes TF, so RViz sits at "Global Status: Warn" complaining
+that the fixed frame is unknown - the cloud still draws, but the yellow warning
+costs more to explain than the one line costs to fix.
+
 ip_port_pc is the one to watch. The GL5 streams to the pcIp:pcPort flashed on
 the sensor, and 0 means "let the OS pick", which the sensor cannot know. Read
 the flashed value with `soslab_ethinfo` and pass it here.
@@ -34,6 +39,8 @@ def generate_launch_description():
         DeclareLaunchArgument('ip_port_pc', default_value='0',
                               description='must match the pcPort flashed on the sensor'),
         DeclareLaunchArgument('rviz', default_value='true'),
+        DeclareLaunchArgument('tf', default_value='true',
+                              description='publish a static map->gl5 transform'),
         DeclareLaunchArgument('rviz_config', default_value=os.path.join(
             get_package_share_directory('ml'), 'rviz', 'gl5.rviz')),
     ]
@@ -65,4 +72,15 @@ def generate_launch_description():
         condition=IfCondition(LaunchConfiguration('rviz')),
     )
 
-    return LaunchDescription(args + [ml_node, rviz_node])
+    # Gives the TF tree a single edge so "map" is a known frame. The sensor sits
+    # at the origin of its own cloud, so this is identity.
+    tf_node = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='gl5_static_tf',
+        output='log',
+        arguments=['--frame-id', 'map', '--child-frame-id', 'gl5'],
+        condition=IfCondition(LaunchConfiguration('tf')),
+    )
+
+    return LaunchDescription(args + [ml_node, tf_node, rviz_node])

@@ -28,7 +28,8 @@ x-common: &common
 
 services:
   # The GL5 driver. network_mode host means no `ports:` is allowed here, and
-  # none is needed: 6080 is already on the host.
+  # none is needed: 6080 is already on the host. The image starts a Zenoh router
+  # of its own, and on host networking that is the team's router on tcp/7447.
   lidar:
     <<: *common
     profiles: ["lidar"]
@@ -43,17 +44,6 @@ services:
       SOSLAB_PC_IP: "${SOSLAB_PC_IP:-0.0.0.0}"
       SOSLAB_PC_PORT: "${SOSLAB_PC_PORT:-0}"
     command: ["bash"]
-
-  # One per team. Viewers dial in to this on tcp/7447.
-  router:
-    <<: *common
-    profiles: ["lidar"]
-    container_name: soslab-gl5-router
-    network_mode: host
-    environment:
-      <<: *common-env
-      START_GUI: "0"
-    command: ["ros2", "run", "rmw_zenoh_cpp", "rmw_zenohd"]
 
   viewer:
     <<: *common
